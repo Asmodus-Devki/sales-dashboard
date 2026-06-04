@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Intelligence Dashboard · Devki Nandan Singh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080D16;
+  --surface:#0F1825;
+  --surface-2:#152033;
+  --border:#1C2A3E;
+  --border-2:#243347;
+  --text-primary:#E2ECF8;
+  --text-secondary:#7A90AE;
+  --text-muted:#44566C;
+  --blue:#3B82F6;
+  --teal:#0FBF84;
+  --amber:#F5A623;
+  --purple:#8B5CF6;
+  --coral:#F87171;
+}
+html{font-size:14px}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text-primary);
+  min-height:100vh;
+  line-height:1.6;
+}
+
+/* ─── HEADER ─────────────────────────────────────────── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 32px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,13,22,0.95);
+  backdrop-filter:blur(12px);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.brand-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--text-primary)}
+.brand-sub{font-size:11px;color:var(--text-secondary);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:20px}
+.prepared-by{text-align:right}
+.prepared-by-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.prepared-by-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--blue);margin-top:1px}
+
+/* ─── PILLS ──────────────────────────────────────────── */
+.pills{display:flex;gap:6px}
+.pill{
+  padding:5px 14px;border-radius:20px;font-size:11px;font-weight:500;
+  cursor:pointer;border:1px solid var(--border-2);
+  color:var(--text-secondary);background:transparent;
+  transition:all .18s ease;font-family:'DM Sans',sans-serif;
+}
+.pill:hover{border-color:var(--blue);color:var(--blue)}
+.pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ─── MAIN ───────────────────────────────────────────── */
+.main{padding:24px 32px 0;max-width:1440px;margin:0 auto}
+
+/* ─── SECTION HEADER ─────────────────────────────────── */
+.section-title{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--text-muted);margin-bottom:12px;
+}
+
+/* ─── KPI GRID ───────────────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  position:relative;overflow:hidden;
+}
+.kpi-accent{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:14px 14px 0 0;
+}
+.kpi-label{
+  font-size:10px;font-weight:500;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px;
+}
+.kpi-value{
+  font-family:'Syne',sans-serif;font-size:27px;font-weight:700;
+  color:var(--text-primary);margin-bottom:6px;line-height:1;
+}
+.kpi-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.kpi-change{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;
+}
+.up{background:rgba(15,191,132,.12);color:#0FBF84}
+.dn{background:rgba(248,113,113,.12);color:#F87171}
+.kpi-period{font-size:10px;color:var(--text-muted)}
+
+/* Sparkline */
+.sparkline{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:12px}
+.sp-bar{flex:1;border-radius:2px 2px 0 0;transition:opacity .2s}
+
+/* ─── CHART GRID ─────────────────────────────────────── */
+.row{display:grid;gap:14px;margin-bottom:20px}
+.row-7-3{grid-template-columns:7fr 3fr}
+.row-5-5{grid-template-columns:1fr 1fr}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text-primary)}
+.card-sub{font-size:11px;color:var(--text-secondary);margin-top:3px}
+.card-badge{
+  font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;
+  background:rgba(59,130,246,.1);color:var(--blue);white-space:nowrap;
+}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary)}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.leg-dashed{width:16px;height:2px;flex-shrink:0;border-top:2px dashed rgba(59,130,246,.5)}
+
+/* ─── DONUT LAYOUT ───────────────────────────────────── */
+.donut-wrap{display:flex;flex-direction:column;height:100%}
+.donut-canvas-wrap{position:relative;width:150px;height:150px;margin:0 auto 16px}
+.donut-center{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;
+}
+.donut-center-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);line-height:1}
+.donut-center-sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+
+.region-list{display:flex;flex-direction:column;gap:10px}
+.region-row{display:flex;align-items:center;gap:10px}
+.region-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.region-name{font-size:12px;color:var(--text-secondary);flex:1}
+.region-bar-track{flex:2;height:4px;background:var(--bg);border-radius:2px}
+.region-bar-fill{height:4px;border-radius:2px}
+.region-pct{font-size:12px;font-weight:600;color:var(--text-primary);min-width:32px;text-align:right}
+.region-val{font-size:11px;color:var(--text-muted);min-width:42px;text-align:right}
+
+/* ─── TABLE ──────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-muted);padding:0 0 10px;text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.tbl td{padding:11px 0;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.prod-name{font-size:13px;font-weight:500;color:var(--text-primary)}
+.prod-cat{font-size:10px;color:var(--text-muted);margin-top:2px}
+.tbl-rev{font-size:13px;font-weight:600}
+.tbl-units{font-size:12px;color:var(--text-secondary)}
+.prog-track{height:4px;border-radius:2px;background:var(--bg);width:64px}
+.prog-fill{height:4px;border-radius:2px}
+.tbl-pct{font-size:10px;color:var(--text-muted);margin-top:3px;text-align:center}
+
+/* rank badge */
+.rank{
+  width:22px;height:22px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-family:'Syne',sans-serif;
+}
+
+/* ─── SQL SNIPPET ────────────────────────────────────── */
+.sql-box{
+  margin-top:14px;padding:12px 14px;background:var(--bg);
+  border-radius:8px;border:1px solid var(--border);
+}
+.sql-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.sql-code{font-family:'Courier New',monospace;font-size:11px;color:#60A5FA;line-height:1.8}
+.sql-kw{color:#C084FC}
+.sql-fn{color:#86EFAC}
+
+/* ─── INSIGHTS ───────────────────────────────────────── */
+.insights-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.insight-card{
+  padding:14px;background:var(--bg);border-radius:10px;
+  border:1px solid var(--border);
+}
+.insight-label{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:8px;
+}
+.insight-text{font-size:12px;color:var(--text-secondary);line-height:1.65}
+.insight-text strong{color:var(--text-primary);font-weight:500}
+
+/* ─── METHODOLOGY ────────────────────────────────────── */
+.method-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.method-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:16px;text-align:center;
+}
+.method-icon{
+  width:40px;height:40px;border-radius:10px;margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.method-tool{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+.method-desc{font-size:11px;color:var(--text-secondary);line-height:1.5}
+
+/* ─── FOOTER ─────────────────────────────────────────── */
+.footer{
+  padding:20px 32px;border-top:1px solid var(--border);margin-top:24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-left-name{
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  color:var(--text-primary);
+}
+.footer-left-name span{color:var(--blue)}
+.footer-left-title{font-size:11px;color:var(--text-muted);margin-top:3px}
+.footer-center{text-align:center;font-size:11px;color:var(--text-muted);line-height:1.7}
+.footer-right{text-align:right}
+.footer-watermark{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border:1px solid var(--border);border-radius:20px;
+}
+.watermark-dot{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.watermark-text{font-size:11px;color:var(--text-secondary)}
+
+/* animation */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card{animation:fadeUp .4s ease both}
+.kpi-card:nth-child(1){animation-delay:.05s}
+.kpi-card:nth-child(2){animation-delay:.1s}
+.kpi-card:nth-child(3){animation-delay:.15s}
+.kpi-card:nth-child(4){animation-delay:.2s}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">Sales Intelligence Dashboard</div>
+      <div class="brand-sub">NovaTech Retail Group &nbsp;·&nbsp; Full Year 2024</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="pills">
+      <button class="pill">Q1</button>
+      <button class="pill">Q2</button>
+      <button class="pill">Q3</button>
+      <button class="pill">Q4</button>
+      <button class="pill active">Full Year</button>
+    </div>
+    <div style="width:1px;height:28px;background:var(--border)"></div>
+    <div class="prepared-by">
+      <div class="prepared-by-label">Prepared by</div>
+      <div class="prepared-by-name">Devki Nandan Singh</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ── KPI SECTION ── -->
+  <div class="section-title">Key Performance Indicators · FY 2024</div>
+  <div class="kpi-grid">
+
+    <!-- Revenue -->
+    <div class="kpi-card">
+      <div class="kpi-accent" style="background:var(--blue)"></div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value">$2.28M</div>
+      <div class="kpi-foot">
+        <span class="kpi-change up">▲ 23.4%</span>
+        <span class="kpi-period">vs FY 2023</span>
+      </div>
+      <div class="sparkline">
+        <div class="sp-bar" style="height:40%;background:rgba(59,130,246,.35)"></div>
+        <div class="sp-bar" style="height:50%;background:rgba(59,130,246,.35)"></div>
+        <div class="sp-bar" style="height:55%;background:rgba(59,130,246,.35)"></div>
+        <div class="sp-bar" style="height:58%;background:rgba(59,130,246,.4)"></div>
+        <div class="sp-bar" style="height:63%;background:rgba(59,130,246,.4)"></div>
+        <div class="sp-bar" style="height:66%;background:rgba(59,130,246,.4)"></div>
+        <div class="sp-bar" style="height:62%;background:rgba(59,130,246,.4)"></div>
+        <div class="sp-bar" style="height:70%;background:rgba(59,130,246,.45)"></div>
+        <div class="sp-bar" style="height:75%;background:rgba(59,130,246,.5)"></div>
+        <div class="sp-bar" style="height:70%;background:rgba(59,130,246,.5)"></div>
+        <div class="sp-bar" style="height:82%;background:rgba(59,130,246,.6)"></div>
+        <div class="sp-bar" style="height:100%;background:var(--blue)"></div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="kpi-card">
+      <div class="kpi-accent" style="background:var(--teal)"></div>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value">8,742</div>
+      <div class="kpi-foot">
+        <span class="kpi-change up">▲ 17.8%</span>
+        <span class="kpi-period">vs FY 2023</span>
+      </div>
+      <div class="sparkline">
+        <div class="sp-bar" style="height:45%;background:rgba(15,191,132,.3)"></div>
+        <div class="sp-bar" style="height:52%;background:rgba(15,191,132,.3)"></div>
+        <div class="sp-bar" style="height:56%;background:rgba(15,191,132,.35)"></div>
+        <div class="sp-bar" style="height:60%;background:rgba(15,191,132,.38)"></div>
+        <div class="sp-bar" style="height:58%;background:rgba(15,191,132,.4)"></div>
+        <div class="sp-bar" style="height:68%;background:rgba(15,191,132,.43)"></div>
+        <div class="sp-bar" style="height:63%;background:rgba(15,191,132,.45)"></div>
+        <div class="sp-bar" style="height:74%;background:rgba(15,191,132,.5)"></div>
+        <div class="sp-bar" style="height:79%;background:rgba(15,191,132,.55)"></div>
+        <div class="sp-bar" style="height:75%;background:rgba(15,191,132,.58)"></div>
+        <div class="sp-bar" style="height:88%;background:rgba(15,191,132,.7)"></div>
+        <div class="sp-bar" style="height:100%;background:var(--teal)"></div>
+      </div>
+    </div>
+
+    <!-- Avg Order Value -->
+    <div class="kpi-card">
+      <div class="kpi-accent" style="background:var(--amber)"></div>
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value">$261</div>
+      <div class="kpi-foot">
+        <span class="kpi-change up">▲ 4.7%</span>
+        <span class="kpi-period">vs FY 2023</span>
+      </div>
+      <div class="sparkline">
+        <div class="sp-bar" style="height:75%;background:rgba(245,166,35,.35)"></div>
+        <div class="sp-bar" style="height:80%;background:rgba(245,166,35,.35)"></div>
+        <div class="sp-bar" style="height:72%;background:rgba(245,166,35,.38)"></div>
+        <div class="sp-bar" style="height:84%;background:rgba(245,166,35,.4)"></div>
+        <div class="sp-bar" style="height:77%;background:rgba(245,166,35,.43)"></div>
+        <div class="sp-bar" style="height:82%;background:rgba(245,166,35,.45)"></div>
+        <div class="sp-bar" style="height:79%;background:rgba(245,166,35,.48)"></div>
+        <div class="sp-bar" style="height:88%;background:rgba(245,166,35,.52)"></div>
+        <div class="sp-bar" style="height:84%;background:rgba(245,166,35,.55)"></div>
+        <div class="sp-bar" style="height:91%;background:rgba(245,166,35,.6)"></div>
+        <div class="sp-bar" style="height:95%;background:rgba(245,166,35,.75)"></div>
+        <div class="sp-bar" style="height:100%;background:var(--amber)"></div>
+      </div>
+    </div>
+
+    <!-- CSAT -->
+    <div class="kpi-card">
+      <div class="kpi-accent" style="background:var(--purple)"></div>
+      <div class="kpi-label">Customer Satisfaction</div>
+      <div class="kpi-value">4.7<span style="font-size:14px;color:var(--text-muted);font-weight:400"> /5</span></div>
+      <div class="kpi-foot">
+        <span class="kpi-change dn">▼ 0.1</span>
+        <span class="kpi-period">vs FY 2023</span>
+      </div>
+      <div style="margin-top:14px">
+        <div style="display:flex;gap:3px;margin-bottom:8px">
+          <span style="font-size:16px;color:var(--amber)">★★★★</span>
+          <span style="font-size:16px;color:var(--amber);opacity:.35">★</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:6px;align-self:center">12,384 reviews</span>
+        </div>
+        <div style="background:var(--bg);border-radius:3px;height:4px">
+          <div style="height:4px;border-radius:3px;width:94%;background:var(--purple)"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:5px">94% positive feedback rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 1: Revenue Trend + Regional ── -->
+  <div class="section-title">Revenue Analysis</div>
+  <div class="row row-7-3">
+
+    <!-- Revenue Trend -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Monthly Revenue Trend</div>
+          <div class="card-sub">January – December 2024 vs 2023 (baseline)</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--teal)">$2.28M</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">Total FY 2024</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="leg-dot" style="background:var(--blue)"></div><span>Revenue 2024</span></div>
+        <div class="legend-item"><div class="leg-dashed"></div><span>Revenue 2023 (baseline)</span></div>
+      </div>
+      <div style="position:relative;height:230px">
+        <canvas id="revChart" role="img" aria-label="Line chart of monthly revenue Jan–Dec 2024 rising from $142K to $248K with comparison to 2023 baseline">Monthly revenue: Jan $142K, Feb $158K, Mar $165K, Apr $172K, May $185K, Jun $193K, Jul $178K, Aug $201K, Sep $215K, Oct $198K, Nov $225K, Dec $248K. 2024 consistently above 2023.</canvas>
+      </div>
+    </div>
+
+    <!-- Regional Donut -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">By Region</div>
+          <div class="card-sub">Revenue distribution</div>
+        </div>
+      </div>
+      <div class="donut-canvas-wrap">
+        <canvas id="regionChart" role="img" aria-label="Donut chart: North 32%, South 28%, East 24%, West 16%">North 32%, South 28%, East 24%, West 16%.</canvas>
+        <div class="donut-center">
+          <div class="donut-center-val">4</div>
+          <div class="donut-center-sub">regions</div>
+        </div>
+      </div>
+      <div class="region-list">
+        <div class="region-row">
+          <div class="region-dot" style="background:var(--blue)"></div>
+          <div class="region-name">North</div>
+          <div class="region-bar-track"><div class="region-bar-fill" style="width:100%;background:var(--blue)"></div></div>
+          <div class="region-pct">32%</div>
+          <div class="region-val">$729K</div>
+        </div>
+        <div class="region-row">
+          <div class="region-dot" style="background:var(--teal)"></div>
+          <div class="region-name">South</div>
+          <div class="region-bar-track"><div class="region-bar-fill" style="width:87.5%;background:var(--teal)"></div></div>
+          <div class="region-pct">28%</div>
+          <div class="region-val">$639K</div>
+        </div>
+        <div class="region-row">
+          <div class="region-dot" style="background:var(--amber)"></div>
+          <div class="region-name">East</div>
+          <div class="region-bar-track"><div class="region-bar-fill" style="width:75%;background:var(--amber)"></div></div>
+          <div class="region-pct">24%</div>
+          <div class="region-val">$548K</div>
+        </div>
+        <div class="region-row">
+          <div class="region-dot" style="background:var(--purple)"></div>
+          <div class="region-name">West</div>
+          <div class="region-bar-track"><div class="region-bar-fill" style="width:50%;background:var(--purple)"></div></div>
+          <div class="region-pct">16%</div>
+          <div class="region-val">$365K</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROW 2: Category Bar + Top Products ── -->
+  <div class="section-title">Product Performance</div>
+  <div class="row row-5-5">
+
+    <!-- Category Bar -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue by Product Category</div>
+          <div class="card-sub">Annual revenue contribution per product line</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="leg-dot" style="background:var(--blue)"></div><span>Revenue ($K)</span></div>
+        <div class="legend-item"><div class="leg-dot" style="background:rgba(15,191,132,.65)"></div><span>Units Sold (÷10)</span></div>
+      </div>
+      <div style="position:relative;height:230px">
+        <canvas id="catChart" role="img" aria-label="Grouped bar chart of revenue and unit sales by category: Electronics $645K, Clothing $512K, Home and Garden $435K, Sports $389K, Beauty $321K">Category breakdown: Electronics $645K leads, followed by Clothing $512K, Home and Garden $435K, Sports $389K, Beauty $321K.</canvas>
+      </div>
+    </div>
+
+    <!-- Top Products Table -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Top 5 Products by Revenue</div>
+          <div class="card-sub">Ranked by total annual revenue contribution</div>
+        </div>
+        <span class="card-badge">FY 2024</span>
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th>Product</th>
+            <th>Revenue</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="rank" style="background:rgba(59,130,246,.15);color:var(--blue)">1</div></td>
+            <td>
+              <div class="prod-name">MacBook Pro M3</div>
+              <div class="prod-cat">Electronics · 892 units</div>
+            </td>
+            <td><div class="tbl-rev" style="color:var(--blue)">$125K</div></td>
+            <td>
+              <div class="prog-track"><div class="prog-fill" style="width:100%;background:var(--blue)"></div></div>
+              <div class="tbl-pct">5.5%</div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="rank" style="background:rgba(15,191,132,.15);color:var(--teal)">2</div></td>
+            <td>
+              <div class="prod-name">Nike Air Max 2024</div>
+              <div class="prod-cat">Sports · 1,245 units</div>
+            </td>
+            <td><div class="tbl-rev" style="color:var(--teal)">$89K</div></td>
+            <td>
+              <div class="prog-track"><div class="prog-fill" style="width:71%;background:var(--teal)"></div></div>
+              <div class="tbl-pct">3.9%</div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="rank" style="background:rgba(245,166,35,.15);color:var(--amber)">3</div></td>
+            <td>
+              <div class="prod-name">Sony 4K TV 65"</div>
+              <div class="prod-cat">Electronics · 312 units</div>
+            </td>
+            <td><div class="tbl-rev" style="color:var(--amber)">$78K</div></td>
+            <td>
+              <div class="prog-track"><div class="prog-fill" style="width:62%;background:var(--amber)"></div></div>
+              <div class="tbl-pct">3.4%</div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="rank" style="background:rgba(139,92,246,.15);color:var(--purple)">4</div></td>
+            <td>
+              <div class="prod-name">Dyson V15 Vacuum</div>
+              <div class="prod-cat">Home &amp; Garden · 654 units</div>
+            </td>
+            <td><div class="tbl-rev" style="color:var(--purple)">$65K</div></td>
+            <td>
+              <div class="prog-track"><div class="prog-fill" style="width:52%;background:var(--purple)"></div></div>
+              <div class="tbl-pct">2.8%</div>
+            </td>
+          </tr>
+          <tr>
+            <td><div class="rank" style="background:rgba(248,113,113,.15);color:var(--coral)">5</div></td>
+            <td>
+              <div class="prod-name">Samsung Galaxy S25</div>
+              <div class="prod-cat">Electronics · 487 units</div>
+            </td>
+            <td><div class="tbl-rev" style="color:var(--coral)">$58K</div></td>
+            <td>
+              <div class="prog-track"><div class="prog-fill" style="width:46%;background:var(--coral)"></div></div>
+              <div class="tbl-pct">2.5%</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="sql-box">
+        <div class="sql-label">SQL — Data Extraction Query</div>
+        <div class="sql-code">
+          <span class="sql-kw">SELECT</span> product_name,<br>
+          &nbsp;&nbsp;<span class="sql-fn">SUM</span>(revenue) <span class="sql-kw">AS</span> total_revenue,<br>
+          &nbsp;&nbsp;<span class="sql-fn">COUNT</span>(order_id) <span class="sql-kw">AS</span> units_sold<br>
+          <span class="sql-kw">FROM</span> sales_fact_2024<br>
+          <span class="sql-kw">GROUP BY</span> product_name<br>
+          <span class="sql-kw">ORDER BY</span> total_revenue <span class="sql-kw">DESC</span><br>
+          <span class="sql-kw">LIMIT</span> 5;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INSIGHTS ── -->
+  <div class="section-title">Key Insights &amp; Strategic Recommendations</div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Analyst Findings — FY 2024</div>
+        <div class="card-sub">Exploratory data analysis performed using Python + Pandas · Visualized via Power BI &amp; Chart.js</div>
+      </div>
+      <span class="card-badge">EDA Summary</span>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-label" style="color:var(--teal)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Revenue Growth
+        </div>
+        <div class="insight-text">Q4 surged <strong>+28.4% vs Q3</strong>, driven by holiday campaigns and bundled electronics promotions. December alone accounted for <strong>10.9% of annual revenue</strong>.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label" style="color:var(--amber)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Regional Opportunity
+        </div>
+        <div class="insight-text">The West region contributes only <strong>16% of revenue</strong> despite comparable population density. A targeted digital campaign could unlock an estimated <strong>$120K–$150K</strong> in additional revenue.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label" style="color:var(--blue)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Top Segment
+        </div>
+        <div class="insight-text">Electronics dominates with <strong>28.3% revenue share</strong> and the highest average order value at <strong>$416</strong>. Recommended for increased inventory investment in Q1 2025.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label" style="color:var(--purple)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Customer Retention
+        </div>
+        <div class="insight-text">Repeat customers represent <strong>62% of total orders</strong>, with an average of 2.8 purchases per customer. Loyalty programme expansion could raise this to <strong>3.5+ purchases</strong>.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label" style="color:var(--coral)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Seasonality Pattern
+        </div>
+        <div class="insight-text">A recurring July dip (<strong>−7.7% vs June</strong>) appears in both 2023 and 2024 data, suggesting a seasonal slowdown. A mid-summer promotion strategy is recommended to flatten the curve.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label" style="color:var(--teal)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          AOV Optimisation
+        </div>
+        <div class="insight-text">Average order value grew modestly at <strong>+4.7%</strong>. Upsell and cross-sell recommendations (e.g., accessories with electronics) could push AOV above <strong>$300</strong> by mid-2025.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOOLS USED ── -->
+  <div class="section-title">Methodology &amp; Tools Used</div>
+  <div class="method-row">
+    <div class="method-card">
+      <div class="method-icon" style="background:rgba(245,166,35,.12)">🗄️</div>
+      <div class="method-tool">SQL</div>
+      <div class="method-desc">Data extracted from relational database using optimised JOIN &amp; GROUP BY queries. Data cleaned and deduplicated.</div>
+    </div>
+    <div class="method-card">
+      <div class="method-icon" style="background:rgba(59,130,246,.12)">🐍</div>
+      <div class="method-tool">Python / Pandas</div>
+      <div class="method-desc">Exploratory Data Analysis (EDA) performed in Jupyter Notebook. Null handling, outlier detection &amp; feature engineering.</div>
+    </div>
+    <div class="method-card">
+      <div class="method-icon" style="background:rgba(15,191,132,.12)">📊</div>
+      <div class="method-tool">Microsoft Power BI</div>
+      <div class="method-desc">Interactive dashboards with slicers, KPI cards, and drill-through reports connected to cleaned dataset via DirectQuery.</div>
+    </div>
+    <div class="method-card">
+      <div class="method-icon" style="background:rgba(139,92,246,.12)">📋</div>
+      <div class="method-tool">Microsoft Excel</div>
+      <div class="method-desc">Pivot tables, VLOOKUP-based validation, and conditional formatting used for initial data profiling &amp; QA checks.</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div>
+    <div class="footer-left-name">Devki <span>Nandan Singh</span></div>
+    <div class="footer-left-title">Data Analyst &nbsp;·&nbsp; Power BI &nbsp;·&nbsp; SQL &nbsp;·&nbsp; Python &nbsp;·&nbsp; Excel</div>
+  </div>
+  <div class="footer-center">
+    NovaTech Retail Group &nbsp;·&nbsp; Sales Intelligence Dashboard &nbsp;·&nbsp; FY 2024<br>
+    Data pipeline: SQL → Python (EDA) → Power BI → Chart.js (HTML report)
+  </div>
+  <div class="footer-right">
+    <div class="footer-watermark">
+      <div class="watermark-dot"></div>
+      <div class="watermark-text">Verified &amp; Cleaned Dataset &nbsp;·&nbsp; June 2026</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════
+     CHARTS
+════════════════════════════════════════════════════════ -->
+<script>
+Chart.defaults.color = '#44566C';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+const gridColor = 'rgba(28,42,62,0.9)';
+const tooltipDefaults = {
+  backgroundColor:'#0F1825',
+  borderColor:'#1C2A3E',
+  borderWidth:1,
+  titleColor:'#E2ECF8',
+  bodyColor:'#7A90AE',
+  padding:10,
+  cornerRadius:8
+};
+
+/* Revenue Trend */
+new Chart(document.getElementById('revChart'), {
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets:[
+      {
+        label:'Revenue 2024 ($K)',
+        data:[142,158,165,172,185,193,178,201,215,198,225,248],
+        borderColor:'#3B82F6',
+        backgroundColor:'rgba(59,130,246,0.07)',
+        borderWidth:2.5,
+        pointBackgroundColor:'#3B82F6',
+        pointBorderColor:'#080D16',
+        pointBorderWidth:2,
+        pointRadius:4,
+        pointHoverRadius:6,
+        fill:true,
+        tension:0.42
+      },
+      {
+        label:'Revenue 2023 ($K)',
+        data:[112,128,135,140,152,158,148,162,170,160,180,195],
+        borderColor:'rgba(59,130,246,0.30)',
+        backgroundColor:'transparent',
+        borderWidth:1.5,
+        borderDash:[6,4],
+        pointRadius:0,
+        tension:0.42
+      }
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{...tooltipDefaults,callbacks:{label:ctx=>' $'+ctx.raw+'K — '+ctx.dataset.label}}
+    },
+    scales:{
+      x:{grid:{color:gridColor},ticks:{color:'#44566C',font:{size:11}}},
+      y:{
+        grid:{color:gridColor},
+        ticks:{color:'#44566C',font:{size:11},callback:v=>'$'+v+'K'},
+        min:80,max:270
+      }
+    }
+  }
+});
+
+/* Region Donut */
+new Chart(document.getElementById('regionChart'), {
+  type:'doughnut',
+  data:{
+    labels:['North','South','East','West'],
+    datasets:[{
+      data:[32,28,24,16],
+      backgroundColor:['#3B82F6','#0FBF84','#F5A623','#8B5CF6'],
+      borderColor:'#0F1825',
+      borderWidth:3,
+      hoverBorderWidth:0
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    cutout:'70%',
+    plugins:{
+      legend:{display:false},
+      tooltip:{...tooltipDefaults,callbacks:{label:ctx=>' '+ctx.label+': '+ctx.raw+'%'}}
+    }
+  }
+});
+
+/* Category Bar */
+new Chart(document.getElementById('catChart'), {
+  type:'bar',
+  data:{
+    labels:['Electronics','Clothing','Home & Garden','Sports','Beauty & Health'],
+    datasets:[
+      {
+        label:'Revenue ($K)',
+        data:[645,512,435,389,321],
+        backgroundColor:'#3B82F6',
+        borderRadius:5,
+        barPercentage:0.55,
+        categoryPercentage:0.75
+      },
+      {
+        label:'Units Sold (÷10)',
+        data:[328,510,295,462,388],
+        backgroundColor:'rgba(15,191,132,0.65)',
+        borderRadius:5,
+        barPercentage:0.55,
+        categoryPercentage:0.75
+      }
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        ...tooltipDefaults,
+        callbacks:{
+          label:ctx=>{
+            if(ctx.datasetIndex===0) return ' Revenue: $'+ctx.raw+'K';
+            return ' Units: '+(ctx.raw*10).toLocaleString();
+          }
+        }
+      }
+    },
+    scales:{
+      x:{
+        grid:{display:false},
+        ticks:{color:'#44566C',font:{size:10},autoSkip:false,maxRotation:0}
+      },
+      y:{
+        grid:{color:gridColor},
+        ticks:{color:'#44566C',font:{size:11},callback:v=>'$'+v+'K'}
+      }
+    }
+  }
+});
+
+/* Pill interactivity */
+document.querySelectorAll('.pill').forEach(p=>{
+  p.addEventListener('click',function(){
+    document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
